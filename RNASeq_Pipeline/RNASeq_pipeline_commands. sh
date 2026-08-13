@@ -1,0 +1,23 @@
+# Quality_Control
+fastqc *.fastq -o fastqc_before_trimming/ -t 12
+
+# Read_trimming 
+fastp -i control_rep1_1.fastq.gz -I control_rep1_2.fastq.gz -o control_rep1_trimm1.fastq -O control_rep1_trimm2.fastq -h control_rep1_fastp.html --detect_adapter_for_pe
+
+#fastqc_after_trimming 
+fastqc *.fastq -o fastqc_after_trimming/ -t 12
+
+# multiqc
+multiqc ./
+
+# HISAT2_indexing 
+hista2-build hsa_chr22.fa -o hsa_chr22_index -p
+
+# HISAT2_alignment 
+hisat2 -x hsa_GRCh38_index -1 ../../control_rep2_trimm1.fastq -2 ../../control_rep2_trimm2.fastq -S control_rep2.sam -p 20
+
+# samtools_processing 
+samtools view -bS Control_REP1.sam | samtools sort -o Control_REP1_sorted.bam
+
+# featurecounts
+featureCounts -a genetranscript.gtf -t gene -o counts.txt -p ../Trimmed_raw_reads/reference/new_reference/sam_files/*.bam -T 30
